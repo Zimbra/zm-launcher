@@ -399,7 +399,21 @@ StartMailboxd()
     }
 
     fclose(stdin);
+    
+    fp = fopen(GC_OUTFILE, "a");
+    if (fp != NULL) {
+	/* Change mailboxd.out ownership */
+	pw = getpwnam(ZIMBRA_USER);
+	if (pw) {
+	    fchown(fileno(fp), pw->pw_uid, pw->pw_gid);
+	} else {
+	    syslog(LOG_WARNING, "can't change ownership of %s: user %s not found: %s", GC_OUTFILE, ZIMBRA_USER, strerror(errno));
+	}
 
+	fclose(fp);
+    } else {
+	syslog(LOG_WARNING, "opening output file %s failed: %s", GC_OUTFILE, strerror(errno));
+    }
 #ifdef DARWIN
     {
 	int tfd;

@@ -38,6 +38,7 @@ MAILBOXD_JAVA_PIDFILE ?= /opt/zimbra/log/zmmailboxd_java.pid
 MAILBOXD_CWD ?= /opt/zimbra/log
 MAILBOXD_HOME ?= /opt/zimbra/mailboxd
 MAILBOXD_OUTFILE ?= /opt/zimbra/log/zmmailboxd.out
+GC_OUTFILE ?= /opt/zimbra/log/gc.log
 ZIMBRA_LIB ?= /opt/zimbra/lib
 ZIMBRA_USER ?= zimbra
 ZIMBRA_CONFIG ?= /opt/zimbra/conf/localconfig.xml
