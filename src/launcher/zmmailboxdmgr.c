@@ -577,6 +577,7 @@ Start(int nextArg, int argc, char *argv[])
 
     /* We don't want these things being passed in from command line */
     AddArgFmt("-Djetty.home=%s", MAILBOXD_HOME);
+    AddArgFmt("-Dsolr.solr.home=%s", SOLR_HOME);
     AddArgFmt("-DSTART=%s/etc/start.config", MAILBOXD_HOME);
     AddArg("-jar");
     AddArgFmt("%s/start.jar", MAILBOXD_HOME);

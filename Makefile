@@ -42,6 +42,7 @@ GC_OUTFILE ?= /opt/zimbra/log/gc.log
 ZIMBRA_LIB ?= /opt/zimbra/lib
 ZIMBRA_USER ?= zimbra
 ZIMBRA_CONFIG ?= /opt/zimbra/conf/localconfig.xml
+SOLR_HOME ?= /opt/zimbra/solr/solr
 
 LAUNCHER_CFLAGS = \
 	-DJAVA_BINARY='"$(JAVA_BINARY)"' \
@@ -54,7 +55,8 @@ LAUNCHER_CFLAGS = \
 	-DGC_OUTFILE='"$(GC_OUTFILE)"' \
 	-DZIMBRA_LIB='"$(ZIMBRA_LIB)"' \
 	-DZIMBRA_USER='"$(ZIMBRA_USER)"' \
-	-DZIMBRA_CONFIG='"$(ZIMBRA_CONFIG)"'
+	-DZIMBRA_CONFIG='"$(ZIMBRA_CONFIG)"' \
+	-DSOLR_HOME='"$(SOLR_HOME)"'
 
 ifeq ($(ZIMBRA_USE_TOMCAT), 1)
 LAUNCHER_CFLAGS += -DZIMBRA_USE_TOMCAT=1
