@@ -9,23 +9,6 @@ BUILD   = build
 
 BUILD_ROOT := $(shell pwd)
 
-BUILD_PLATFORM := $(shell sh $(BUILD_ROOT)/../ZimbraBuild/rpmconf/Build/get_plat_tag.sh)
-
-ifeq ($(BUILD_PLATFORM), MACOSX)
-MACDEF := -DDARWIN
-JAVA_BINARY = /usr/bin/java
-endif
-
-ifeq (MACOSXx86,$(findstring MACOSXx86,$(BUILD_PLATFORM)))   
-ifeq ($(BUILD_PLATFORM), MACOSXx86)
-MACDEF := -DDARWIN
-else
-MACDEF := -DDARWIN9
-endif
-JAVA_BINARY = /usr/bin/java
-endif
-
-
 all: $(BUILD) $(BUILD)/zmmailboxdmgr $(BUILD)/zmmailboxdmgr.unrestricted
 
 $(BUILD):
