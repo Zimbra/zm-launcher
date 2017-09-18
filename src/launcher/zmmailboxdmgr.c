@@ -570,20 +570,21 @@ Start(int nextArg, int argc, char *argv[])
      * AddArg("-jre-no-restrict-search");
      */
    
-    AddArgFmt("-Djava.io.tmpdir=%s/work", MAILBOXD_HOME); 
+    AddArgFmt("-Djava.io.tmpdir=%s/work", JETTY_BASE);
     AddArgFmt("-Djava.library.path=%s", ZIMBRA_LIB);
-    AddArgFmt("-Djava.endorsed.dirs=%s/common/endorsed", MAILBOXD_HOME);
+    AddArgFmt("-Djava.endorsed.dirs=%s/common/endorsed", JETTY_BASE);
     AddArgFmt("-Dzimbra.config=%s", ZIMBRA_CONFIG);
 
     /* We don't want these things being passed in from command line */
-    AddArgFmt("-Djetty.home=%s", MAILBOXD_HOME);
-    AddArgFmt("-DSTART=%s/etc/start.config", MAILBOXD_HOME);
+    AddArgFmt("-Djetty.base=%s", JETTY_BASE);
+    AddArgFmt("-Djetty.home=%s", JETTY_HOME);
+    AddArgFmt("-DSTART=%s/etc/start.config", JETTY_BASE);
     AddArg("-jar");
-    AddArgFmt("%s/start.jar", MAILBOXD_HOME);
+    AddArgFmt("%s/start.jar", JETTY_HOME);
     AddArg("--module=zimbra,server,servlet,servlets,jsp,jstl,jmx,resources,websocket,ext,plus,rewrite,monitor,continuation,webapp,setuid");
-    AddArgFmt("jetty.home=%s", MAILBOXD_HOME);
-    AddArgFmt("jetty.base=%s", MAILBOXD_HOME);
-    AddArgFmt("%s/etc/jetty.xml", MAILBOXD_HOME);
+    AddArgFmt("jetty.home=%s", JETTY_HOME);
+    AddArgFmt("jetty.base=%s", JETTY_BASE);
+    AddArgFmt("%s/etc/jetty.xml", JETTY_BASE);
 
     if (Verbose) {
 	ShowNewEnv();
