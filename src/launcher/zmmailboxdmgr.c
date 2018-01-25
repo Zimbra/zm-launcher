@@ -193,6 +193,20 @@ AddArgFmt(const char *fmt, ...)
     AddArg(strdup(buf));
 }
 
+static char *
+FindArg(char *arg)
+{
+    int compareLen = strlen(arg);
+    char **e = newArgv;
+    while (*e != NULL) {
+        if (strncmp(arg, *e, compareLen) == 0) {
+            return *e;
+        }
+        e++;
+    }
+    return NULL; 
+}
+
 static void
 ShowNewArgs()
 {
@@ -401,10 +415,14 @@ StartMailboxd()
     }
 
     fclose(stdin);
-    
-    fp = fopen(GC_OUTFILE, "a");
+
+    if (FindArg("-XX:+UseGCLogFileRotation") != NULL) { 
+        fp = fopen(GC_OUTFILE ".0.current", "a");
+    } else {
+        fp = fopen(GC_OUTFILE, "a");
+    }
     if (fp != NULL) {
-	/* Change mailboxd.out ownership */
+	/* Change gc.log ownership */
 	pw = getpwnam(ZIMBRA_USER);
 	if (pw) {
 	    fchown(fileno(fp), pw->pw_uid, pw->pw_gid);
