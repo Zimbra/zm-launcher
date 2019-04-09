@@ -591,6 +591,10 @@ Start(int nextArg, int argc, char *argv[])
     AddArgFmt("-Djava.io.tmpdir=%s/work", JETTY_BASE);
     AddArgFmt("-Djava.library.path=%s", ZIMBRA_LIB);
     AddArgFmt("-Dzimbra.config=%s", ZIMBRA_CONFIG);
+    
+    // JDK 11
+    AddArg("--module-path");
+    AddArgFmt("%s/common/endorsed", JETTY_BASE);
 
     /* We don't want these things being passed in from command line */
     AddArgFmt("-Djetty.base=%s", JETTY_BASE);
