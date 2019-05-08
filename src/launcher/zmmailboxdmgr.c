@@ -602,7 +602,7 @@ Start(int nextArg, int argc, char *argv[])
     AddArgFmt("-DSTART=%s/etc/start.config", JETTY_BASE);
     AddArg("-jar");
     AddArgFmt("%s/start.jar", JETTY_HOME);
-    AddArg("--module=zimbra,server,servlet,servlets,jsp,jstl,jmx,resources,websocket,ext,plus,rewrite,continuation,webapp,setuid");
+    AddArg("--module=zimbra,server,mail,servlet,servlets,jsp,jstl,jmx,resources,websocket,ext,plus,rewrite,continuation,webapp,setuid");
     AddArgFmt("jetty.home=%s", JETTY_HOME);
     AddArgFmt("jetty.base=%s", JETTY_BASE);
     AddArgFmt("%s/etc/jetty.xml", JETTY_BASE);
