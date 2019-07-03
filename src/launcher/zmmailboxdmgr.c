@@ -591,6 +591,10 @@ Start(int nextArg, int argc, char *argv[])
     AddArgFmt("-Djava.io.tmpdir=%s/work", JETTY_BASE);
     AddArgFmt("-Djava.library.path=%s", ZIMBRA_LIB);
     AddArgFmt("-Dzimbra.config=%s", ZIMBRA_CONFIG);
+    
+    // JDK 11
+    AddArg("--module-path");
+    AddArgFmt("%s/common/endorsed", JETTY_BASE);
 
     /* We don't want these things being passed in from command line */
     AddArgFmt("-Djetty.base=%s", JETTY_BASE);
@@ -598,7 +602,7 @@ Start(int nextArg, int argc, char *argv[])
     AddArgFmt("-DSTART=%s/etc/start.config", JETTY_BASE);
     AddArg("-jar");
     AddArgFmt("%s/start.jar", JETTY_HOME);
-    AddArg("--module=zimbra,server,servlet,servlets,jsp,jstl,jmx,resources,websocket,ext,plus,rewrite,monitor,continuation,webapp,setuid");
+    AddArg("--module=zimbra,server,mail,servlet,servlets,jsp,jstl,jmx,resources,websocket,ext,plus,rewrite,continuation,webapp,setuid");
     AddArgFmt("jetty.home=%s", JETTY_HOME);
     AddArgFmt("jetty.base=%s", JETTY_BASE);
     AddArgFmt("%s/etc/jetty.xml", JETTY_BASE);
