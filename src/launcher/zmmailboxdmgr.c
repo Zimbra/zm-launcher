@@ -599,14 +599,12 @@ Start(int nextArg, int argc, char *argv[])
     /* We don't want these things being passed in from command line */
     AddArgFmt("-Djetty.base=%s", JETTY_BASE);
     AddArgFmt("-Djetty.home=%s", JETTY_HOME);
-    AddArgFmt("-Djetty.zimlet.base=%s", JETTY_ZIMLET_BASE);
     AddArgFmt("-DSTART=%s/etc/start.config", JETTY_BASE);
     AddArg("-jar");
     AddArgFmt("%s/start.jar", JETTY_HOME);
     AddArg("--module=zimbra,server,mail,servlet,servlets,jsp,jstl,jmx,resources,websocket,ext,plus,rewrite,continuation,webapp,setuid");
     AddArgFmt("jetty.home=%s", JETTY_HOME);
     AddArgFmt("jetty.base=%s", JETTY_BASE);
-    AddArgFmt("jetty.zimlet.base=%s", JETTY_ZIMLET_BASE);
     AddArgFmt("%s/etc/jetty.xml", JETTY_BASE);
 
     if (Verbose) {
