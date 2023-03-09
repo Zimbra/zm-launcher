@@ -119,7 +119,16 @@ static const char *DisallowedJVMArgs[] = {
     "-agentlib",
     "-agentpath",
     "-classpath",
+    "-cp",
+    "--class-path",
     "-javaagent",
+    "--module-path",
+    "-p",
+    "--upgrade-module-path",
+    "--add-modules",
+    "--limit-modules",
+    "--patch-module",
+    "--add-exports"
 };
 #endif
 
@@ -152,7 +161,7 @@ NewArgEnsureCapacity(int thisManyMore)
 	newArgCapacity = 32;
 	newArgv = (char **)malloc(sizeof(*newArgv) * newArgCapacity);
     }
-  
+
     /* the -1 here is so we have room to stick a NULL to terminate newArgv */
     if ((newArgCapacity - 1) <= (newArgCount + thisManyMore)) {
 	newArgCapacity = newArgCapacity * 2;
@@ -160,7 +169,7 @@ NewArgEnsureCapacity(int thisManyMore)
     }
 }
 
-static void 
+static void
 AddArg(char *arg)
 {
     NewArgEnsureCapacity(1);
@@ -204,7 +213,7 @@ FindArg(char *arg)
         }
         e++;
     }
-    return NULL; 
+    return NULL;
 }
 
 static void
@@ -288,7 +297,7 @@ GetPidFromFile(const char *pidFile)
 	syslog(LOG_ERR, "%s is not a regular file: %s", pidFile, strerror(errno));
 	exit(1);
     }
-    
+
     fp = fopen(pidFile, "r");
     if (fp == NULL) {
 	syslog(LOG_WARNING, "fopen(%s) failed: %s", pidFile, strerror(errno));
@@ -352,7 +361,7 @@ RecordPid(const char *which, const char *pidFile, int pidToWrite)
     /* Reset the mask so the pid file has the exact permissions we say
      * it should have. */
     umask(0);
-  
+
     pidfd = creat(pidFile, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (pidfd < 0) {
 	syslog(LOG_ERR, "could not create %s: %s", pidFile, strerror(errno));
@@ -388,7 +397,7 @@ StartMailboxd()
        running nanny/manager process knows the true pid of the
        mailboxd/JVM that is running right now. */
     RecordPid("java", MAILBOXD_JAVA_PIDFILE, getpid());
-       
+
     /* It is customary to not inherit umask and to clear the umask
        completely so applications can set whatever exact permissions it
        is that they want. However, Java programs can not set permissions
@@ -416,7 +425,7 @@ StartMailboxd()
 
     fclose(stdin);
 
-    if (FindArg("-XX:+UseGCLogFileRotation") != NULL) { 
+    if (FindArg("-XX:+UseGCLogFileRotation") != NULL) {
         fp = fopen(GC_OUTFILE ".0.current", "a");
     } else {
         fp = fopen(GC_OUTFILE, "a");
@@ -500,7 +509,7 @@ StopMailboxd()
 	}
 	/* Loop and wait another second ... */
     }
-	
+
     /* Not sure what to do here, even SIGKILL failed. */
     syslog(LOG_ERR, "manager exiting: mailboxd/JVM process could not be killed");
     exit(1);
@@ -532,7 +541,7 @@ CheckJavaBinaryExists()
 /* This signal handler shuts down the mailboxd/JVM process.  When it
  * returns the mailboxd/JVM process should not be running. */
 static void
-StopHandler(int signal) 
+StopHandler(int signal)
 {
     if (signal == SIGTERM) {
 	ShutdownRequested = 1;
@@ -573,7 +582,7 @@ Start(int nextArg, int argc, char *argv[])
 
     /* first argument must be name of binary */
     AddArg(JAVA_BINARY);
-    
+
     for (i = nextArg; i < argc; i++) {
 	if (IsAllowedJVMArg(argv[i])) {
 	    AddArg(argv[i]);
@@ -582,16 +591,16 @@ Start(int nextArg, int argc, char *argv[])
 	    exit(1);
 	}
     }
-    
+
     /* REMIND: Do we need this?  Seems applicable only when -jar option
      * is present?
      * AddArg("-jre-no-restrict-search");
      */
-   
+
     AddArgFmt("-Djava.io.tmpdir=%s/work", JETTY_BASE);
     AddArgFmt("-Djava.library.path=%s", ZIMBRA_LIB);
     AddArgFmt("-Dzimbra.config=%s", ZIMBRA_CONFIG);
-    
+
     // JDK 11
     AddArg("--module-path");
     AddArgFmt("%s/common/endorsed", JETTY_BASE);
@@ -599,21 +608,19 @@ Start(int nextArg, int argc, char *argv[])
     /* We don't want these things being passed in from command line */
     AddArgFmt("-Djetty.base=%s", JETTY_BASE);
     AddArgFmt("-Djetty.home=%s", JETTY_HOME);
-    AddArgFmt("-Djetty.zimlet.base=%s", JETTY_ZIMLET_BASE);
     AddArgFmt("-DSTART=%s/etc/start.config", JETTY_BASE);
     AddArg("-jar");
     AddArgFmt("%s/start.jar", JETTY_HOME);
     AddArg("--module=zimbra,server,mail,servlet,servlets,jsp,jstl,jmx,resources,websocket,ext,plus,rewrite,continuation,webapp,setuid");
     AddArgFmt("jetty.home=%s", JETTY_HOME);
     AddArgFmt("jetty.base=%s", JETTY_BASE);
-    AddArgFmt("jetty.zimlet.base=%s", JETTY_ZIMLET_BASE);
     AddArgFmt("%s/etc/jetty.xml", JETTY_BASE);
 
     if (Verbose) {
 	ShowNewEnv();
 	ShowNewArgs();
     }
-    
+
     /* Now daemonize the manager process. */
     if (fork() != 0) {
 	exit(0);
@@ -624,25 +631,25 @@ Start(int nextArg, int argc, char *argv[])
     setsid();
 
     chdir(MAILBOXD_CWD);
-  
+
     /* Note that the PID that is written is the PID of the launcher
      * process, not that of the JVM. */
     RecordPid("manager", MAILBOXD_MANAGER_PIDFILE, getpid());
-    
+
     /* On SIGTERM, we set ShutdownRequested to true. */
     signal(SIGTERM, StopHandler);
-    
+
     /* On SIGHUP, we go ahead and shutdown mailboxd, but do not set
        ShutdownRequested to true. */
     signal(SIGHUP, StopHandler);
-    
+
     /* On SIGQUIT, we forward the SIGQUIT on to the mailboxd/JVM
        process. */
     signal(SIGQUIT, ThreadDumpHandler);
 
     while (1) {
 	StartMailboxd();
-	
+
 	syslog(LOG_INFO, "manager started mailboxd/JVM with pid %d", MailboxdPid);
 	wait(NULL);
 	syslog(LOG_INFO, "manager woke up from wait on mailboxd/JVM with pid %d", MailboxdPid);
@@ -652,7 +659,7 @@ Start(int nextArg, int argc, char *argv[])
 	    unlink(MAILBOXD_MANAGER_DEPRECATED_PIDFILE);
 	    break;
 	}
-	
+
 	if (BounceRequested) {
 	    BounceRequested = 0;
 	    lastExit = 0;
@@ -660,7 +667,7 @@ Start(int nextArg, int argc, char *argv[])
 	       by not setting lastExit. */
 	    continue;
 	}
-	
+
 	if (lastExit > 0) {
 	    time_t now = time(NULL);
 	    if ((now - lastExit) < DoubleExitInterval) {
@@ -799,7 +806,7 @@ main(int argc, char *argv[])
 	}
 	nextArg++;
     }
-    if (action == NULL) { 
+    if (action == NULL) {
 	Usage(progname);
     }
 
