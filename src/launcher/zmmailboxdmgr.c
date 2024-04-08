@@ -128,7 +128,8 @@ static const char *DisallowedJVMArgs[] = {
     "--add-modules",
     "--limit-modules",
     "--patch-module",
-    "--add-exports"
+    "--add-exports",
+    "-jar"
 };
 #endif
 
