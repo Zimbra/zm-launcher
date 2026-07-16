@@ -9,7 +9,7 @@ references:
         - run:
            name: Cloning dependency repositories.
            command: |
-              git clone -b poc --single-branch https://$GITHUB_ACCESS_TOKEN@github.com/Zimbra/zm-nexus.git ~/zm-nexus
+              git clone -b master --single-branch https://$GITHUB_ACCESS_TOKEN@github.com/Zimbra/zm-nexus.git ~/zm-nexus
         - persist_to_workspace:
            root: ..
            paths:
@@ -115,4 +115,4 @@ workflows:
            filters:
               branches:
                 only:
-                  - ZCICD-49
+                  - develop
