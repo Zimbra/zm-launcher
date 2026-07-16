@@ -1,0 +1,118 @@
+version: 2.1
+
+############################################################################
+references:
+
+  checkout_job_steps: &checkout_job_steps
+     steps:
+        - checkout
+        - run:
+           name: Cloning dependency repositories.
+           command: |
+              git clone -b poc --single-branch https://$GITHUB_ACCESS_TOKEN@github.com/Zimbra/zm-nexus.git ~/zm-nexus
+        - persist_to_workspace:
+           root: ..
+           paths:
+              - zm-launcher
+              - zm-nexus
+
+############################################################################
+  build_job_steps: &build_job_steps
+     steps:
+        - attach_workspace:
+           at: ..
+        - run:
+           name: Building zmmailboxdmgr binaries
+           command: |
+              set -euo pipefail
+              cd ../zm-launcher
+
+              make clean
+              make
+
+              echo "--- Build output ---"
+              ls -la build/zmmailboxdmgr build/zmmailboxdmgr.unrestricted
+
+              if [ ! -f build/zmmailboxdmgr ] || [ ! -f build/zmmailboxdmgr.unrestricted ]; then
+                echo "ERROR: expected binaries not found under build/"
+                exit 1
+              fi
+        - persist_to_workspace:
+           root: ..
+           paths:
+              - zm-launcher/build
+
+############################################################################
+  publish_job_steps: &publish_job_steps
+     steps:
+        - attach_workspace:
+           at: ..
+        - run:
+           name: Publishing zmmailboxdmgr binaries to Nexus
+           command: |
+              cd ../zm-launcher
+              export NEXUS_RAW_REPO="${NEXUS_RAW_REPO:-raw-artifacts}"
+              bash ~/zm-nexus/scripts/publish-raw-artifacts-to-nexus.sh \
+                build \
+                "zm-launcher" \
+                "zmmailboxdmgr*"
+
+############################################################################
+jobs:
+  checkout:
+     working_directory: ~/zm-launcher
+     shell: /bin/bash -eo pipefail
+     docker:
+     - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-22.04
+       auth:
+         username: $DOCKER_USER
+         password: $DOCKER_PASS
+     resource_class: small
+     <<: *checkout_job_steps
+
+  build:
+     working_directory: ~/zm-launcher
+     shell: /bin/bash -eo pipefail
+     docker:
+     - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-22.04
+       auth:
+         username: $DOCKER_USER
+         password: $DOCKER_PASS
+     resource_class: small
+     <<: *build_job_steps
+
+  publish:
+     working_directory: ~/zm-launcher
+     shell: /bin/bash -eo pipefail
+     circleci_ip_ranges: true
+     docker:
+     - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-22.04
+       auth:
+         username: $DOCKER_USER
+         password: $DOCKER_PASS
+     resource_class: small
+     <<: *publish_job_steps
+
+############################################################################
+workflows:
+  version: 2
+  main:
+     jobs:
+        - checkout:
+           context:
+              - docker-dev-registry
+        - build:
+           context:
+              - docker-dev-registry
+           requires:
+              - checkout
+        - publish:
+           context:
+              - docker-dev-registry
+              - nexus-dev-artifactory
+           requires:
+              - build
+           filters:
+              branches:
+                only:
+                  - ZCICD-49
