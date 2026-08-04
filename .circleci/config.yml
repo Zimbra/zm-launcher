@@ -74,7 +74,7 @@ jobs:
      working_directory: ~/zm-launcher
      shell: /bin/bash -eo pipefail
      docker:
-     - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-22.04
+     - image: $DOCKER_REGISTRY/zm-base-os:devcore-ubuntu-18.04
        auth:
          username: $DOCKER_USER
          password: $DOCKER_PASS
