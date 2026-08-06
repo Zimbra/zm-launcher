@@ -1,8 +1,6 @@
 version: 2.1
-
 ############################################################################
 references:
-
   checkout_job_steps: &checkout_job_steps
      steps:
         - checkout
@@ -15,7 +13,6 @@ references:
            paths:
               - zm-launcher
               - zm-nexus
-
 ############################################################################
   build_job_steps: &build_job_steps
      steps:
@@ -26,13 +23,10 @@ references:
            command: |
               set -euo pipefail
               cd ../zm-launcher
-
               make clean
               make
-
               echo "--- Build output ---"
               ls -la build/zmmailboxdmgr build/zmmailboxdmgr.unrestricted
-
               if [ ! -f build/zmmailboxdmgr ] || [ ! -f build/zmmailboxdmgr.unrestricted ]; then
                 echo "ERROR: expected binaries not found under build/"
                 exit 1
@@ -41,7 +35,6 @@ references:
            root: ..
            paths:
               - zm-launcher/build
-
 ############################################################################
   publish_job_steps: &publish_job_steps
      steps:
@@ -50,13 +43,28 @@ references:
         - run:
            name: Publishing zmmailboxdmgr binaries to Nexus
            command: |
+              set -euo pipefail
               cd ../zm-launcher
+
+              # ---- build a unique version string: <release_number>.<git_timestamp>-develop-snapshot ----
+              BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NO%_}"
+              BUILD_RELEASE_NUMBER="${BUILD_RELEASE_NUMBER%_GA}"
+              GIT_TIMESTAMP=$(git log -1 --pretty=format:%at)
+              VERSION="${BUILD_RELEASE_NUMBER}.${GIT_TIMESTAMP}-develop-snapshot"
+
+              echo "Publishing VERSION=$VERSION"
+
+              # ---- copy binaries into a versioned folder with versioned filenames ----
+              PUBLISH_DIR="build/${VERSION}"
+              mkdir -p "$PUBLISH_DIR"
+              cp build/zmmailboxdmgr "$PUBLISH_DIR/zmmailboxdmgr-${VERSION}"
+              cp build/zmmailboxdmgr.unrestricted "$PUBLISH_DIR/zmmailboxdmgr.unrestricted-${VERSION}"
+
               export NEXUS_RAW_REPO="${NEXUS_RAW_REPO:-raw-artifacts}"
               bash ~/zm-nexus/scripts/publish-raw-artifacts-to-nexus.sh \
-                build \
-                "zm-launcher" \
+                "$PUBLISH_DIR" \
+                "zm-launcher/${VERSION}" \
                 "zmmailboxdmgr*"
-
 ############################################################################
 jobs:
   checkout:
@@ -69,7 +77,6 @@ jobs:
          password: $DOCKER_PASS
      resource_class: small
      <<: *checkout_job_steps
-
   build:
      working_directory: ~/zm-launcher
      shell: /bin/bash -eo pipefail
@@ -80,7 +87,6 @@ jobs:
          password: $DOCKER_PASS
      resource_class: small
      <<: *build_job_steps
-
   publish:
      working_directory: ~/zm-launcher
      shell: /bin/bash -eo pipefail
@@ -92,7 +98,6 @@ jobs:
          password: $DOCKER_PASS
      resource_class: small
      <<: *publish_job_steps
-
 ############################################################################
 workflows:
   version: 2
@@ -110,6 +115,7 @@ workflows:
            context:
               - docker-dev-registry
               - nexus-dev-artifactory
+              - build-info
            requires:
               - build
            filters:
